@@ -1,26 +1,40 @@
 import { A } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { Match, Show, Switch, createSignal, onMount } from "solid-js";
 import Login from "./../authentication/Login";
 import { Portal } from "solid-js/web";
-
+import "./Navbar.module.css";
+import { User } from "@supabase/supabase-js";
+import supabase from "./../supabase";
 const Navbar = () => {
   const [isOpen, setIsOpen] = createSignal(false);
+  const [user, setUser] = createSignal<User>();
+
+  onMount(async () => {
+    const { data } = await supabase.auth.getSession()
+
+    if (data.session) {
+      console.log("Logged in user ", data.session.user)
+      setUser(data.session.user)
+    }
+  })
 
   return (
     <nav class="navbar" role="navigation" aria-label="main site navigation">
-      {isOpen() && (
-        <Portal mount={document.body}>
-          <div class={isOpen() ? "modal is-active" : "modal"}>
+      <Show when={isOpen()}>
+        <Portal>
+          <div class={"modal is-active"}>
             <div class="modal-background" />
-            <div class="modal-content">
-              <Login
-                onCancel={() => setIsOpen(false)}
-                onConfirm={() => setIsOpen(false)}
-              />
+            <div class="modal-content has-background-primary-dark">
+              <section class="section">
+                <Login
+                  onCancel={() => setIsOpen(false)}
+                  onConfirm={() => setIsOpen(false)}
+                />
+              </section>
             </div>
           </div>
         </Portal>
-      )}
+      </Show>
       <div class="navbar-brand">
         <a class="navbar-item">
           <svg
@@ -69,9 +83,16 @@ const Navbar = () => {
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons">
-            <button class="button is-primary" onClick={() => setIsOpen(true)}>
-              <strong>Login</strong>
-            </button>
+            <Switch fallback={
+              <button class="button is-primary" onClick={() => setIsOpen(true)}>
+                <strong>Login</strong>
+              </button>
+            }>
+              <Match when={user()}>
+                <button class="button is-primary" onClick={async () => await supabase.auth.signOut()}><strong>Log Out</strong>
+                </button>
+              </Match>
+            </Switch>
           </div>
         </div>
       </div>

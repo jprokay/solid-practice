@@ -10,12 +10,13 @@
     docker
     prettierd
     eslint_d
+    postgresql_16
   ];
 
   # https://devenv.sh/languages/
   languages.typescript.enable = true;
 
-  env.DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+  env.DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:54322/postgres?sslmode=disable";
   env.DBMATE_MIGRATIONS_DIR = "./supabase/migrations";
   env.DBMATE_SCHEMA_FILE = "./supabase/schema.sql";
 
@@ -36,6 +37,10 @@
 
   # https://devenv.sh/processes/
   # processes.ping.exec = "ping example.com";
+  processes = {
+    supabase.exec = "${pkgs.supabase-cli}/bin/supabase stop && ${pkgs.supabase-cli}/bin/supabase start";
+    localias.exec = "localias stop && localias start";
+  };
 
   # processes = {
   # prettierd.exec = "prettierd restart";
