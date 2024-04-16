@@ -1,13 +1,14 @@
 {
   inputs =
     let
-      version = "1.0.2";
+      version = "1.0.4";
 system = "aarch64-darwin";
 devenv_root = "/Users/jprokay/Code/solid-practice";
 devenv_dotfile = ./.devenv;
 devenv_dotfile_string = ".devenv";
 container_name = null;
-tmpdir = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/";
+devenv_tmpdir = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/";
+devenv_runtime = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/devenv-7cc1bb4";
 
         in {
         pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
@@ -20,13 +21,14 @@ tmpdir = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/";
 
       outputs = { nixpkgs, ... }@inputs:
         let
-          version = "1.0.2";
+          version = "1.0.4";
 system = "aarch64-darwin";
 devenv_root = "/Users/jprokay/Code/solid-practice";
 devenv_dotfile = ./.devenv;
 devenv_dotfile_string = ".devenv";
 container_name = null;
-tmpdir = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/";
+devenv_tmpdir = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/";
+devenv_runtime = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/devenv-7cc1bb4";
 
             devenv =
             if builtins.pathExists (devenv_dotfile + "/devenv.json")
@@ -82,7 +84,8 @@ tmpdir = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/";
                 devenv.dotfile = devenv_root + "/" + devenv_dotfile_string;
               }
               (pkgs.lib.optionalAttrs (inputs.devenv.isTmpDir or false) {
-                devenv.tmpdir = tmpdir;
+                devenv.tmpdir = devenv_tmpdir;
+                devenv.runtime = devenv_runtime;
               })
               (pkgs.lib.optionalAttrs (container_name != null) {
                 container.isBuilding = pkgs.lib.mkForce true;

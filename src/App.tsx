@@ -3,6 +3,7 @@ import { Router, Route, RouteSectionProps } from "@solidjs/router";
 import Navbar from "./navigation/Navbar";
 
 const Practice = lazy(() => import("./pages/Practice"));
+const Loops = lazy(() => import("./pages/Loops"));
 
 const Layout: Component<RouteSectionProps> = (props) => {
   return (
@@ -17,6 +18,7 @@ const App: Component = () => {
     <>
       <Router root={Layout}>
         <Route path="/" component={Practice} />
+        <Route path="/loops" component={Loops} />
       </Router>
     </>
   );
