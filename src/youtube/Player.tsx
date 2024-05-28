@@ -1,6 +1,5 @@
 import {
   Component,
-  For,
   Show,
   createEffect,
   createSignal,
@@ -14,10 +13,11 @@ import { createStore, produce } from "solid-js/store"
 import supabase from "../supabase";
 import { useSearchParams } from "@solidjs/router";
 
+import { Tables } from "../types/supabase"
+
 const Player: Component = () => {
   const [search, setSearch] = useSearchParams();
   const [player, setPlayer] = createSignal<YTPlayer>();
-
 
   const [video, setVideo] = createStore({
     start: {
@@ -36,20 +36,12 @@ const Player: Component = () => {
     name: undefined,
   });
 
-  createEffect(() => console.log('End.minute: ', video.end.minute))
-
-  const playbackRates = [
-    0.25, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.05, 1.1, 1.15, 1.2,
-  ];
-
-
   onMount(() => {
     const ytPlayer = YouTubePlayer("player", {
       videoId: search.videoId || video.videoId,
       playerVars: {
         autoplay: 0,
         enablejsapi: 1,
-        start: 0
       },
     });
 
@@ -63,8 +55,6 @@ const Player: Component = () => {
 
         const endMinutes = Math.floor(duration / 60);
         const endSeconds = Math.round(duration % 60);
-
-        console.log("setting duration", duration)
 
         setVideo("duration", duration)
         setVideo("end", ({
@@ -164,150 +154,201 @@ const Player: Component = () => {
 
     const formData = new FormData(form);
 
-    await supabase.from("loops").insert({
-      loop_start_second: formData.get("startSeconds"),
-      loop_start_minute: formData.get("startMinutes"),
-      loop_end_second: formData.get("endSeconds"),
-      loop_end_minute: formData.get("endMinutes"),
-      video_id: formData.get("videoId"),
-      video_name: "todo"
-    })
+    const id = formData.get("loopId")
+
+    if (id) {
+      await supabase.from("loops").update({
+        loop_start_second: Number(formData.get("startSeconds") as string),
+        loop_start_minute: Number(formData.get("startMinutes") as string),
+        loop_end_second: Number(formData.get("endSeconds") as string),
+        loop_end_minute: Number(formData.get("endMinutes") as string),
+        video_id: formData.get("videoId") as string,
+        loop_name: formData.get("loopName") as string,
+        loop_id: id as string
+      }).eq('loop_id', id)
+    } else {
+      await supabase.from("loops").insert({
+        loop_start_second: Number(formData.get("startSeconds") as string),
+        loop_start_minute: Number(formData.get("startMinutes") as string),
+        loop_end_second: Number(formData.get("endSeconds") as string),
+        loop_end_minute: Number(formData.get("endMinutes") as string),
+        video_id: formData.get("videoId") as string,
+        loop_name: formData.get("loopName") as string,
+      })
+    }
   }
 
+  // TODO: Update inputs to have a separate for seeing the whole URL instead of just the video ID
   return (
-    <form onSubmit={submitForm}>
-      <div class="container">
-        <div id="player"></div>
-        <div class="field">
-          <label class="label">Video URL</label>
-          <div class="control">
-            <input
-              class="input"
-              type="text"
-              name="videoId"
-              required={true}
-              value={video.videoId}
-              onInput={(e) => {
-                const videoId = parseUrl(e.target.value)
-                setSearch({ startMinute: undefined, startSecond: undefined, videoId, endMinute: undefined, endSecond: undefined })
-                setVideo("videoId", videoId);
-              }}
-            />
-          </div>
-        </div>
-        <div class="level">
-          <div class="level-item ">
-            <input
-              type="number"
-              class="input"
-              name="startMinutes"
-              required={true}
-              value={video.start.minute}
-              onInput={(e) => setVideo("start", (start) => ({ ...start, minute: Number(e.target.value) }))}
-            />
-            <input
-              type="number"
-              class="input"
-              name="startSeconds"
-              required={true}
-              value={video.start.second}
-              onInput={(e) => setVideo("start", (start) => ({ ...start, second: Number(e.target.value) }))}
-            />
-          </div>
-          <Show
-            when={video.playing}
-            fallback={
-              <button
-                class="level-item button is-rounded"
-                type="button"
-                onClick={() => playVideo()}
-              >
-                <span class="icon">
-                  <svg
-                    stroke="currentColor"
-                    fill="currentColor"
-                    stroke-width="0"
-                    viewBox="0 0 24 24"
-                    height="200px"
-                    width="200px"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <g id="Play_1">
-                      <path d="M6.562,21.94a2.5,2.5,0,0,1-2.5-2.5V4.56A2.5,2.5,0,0,1,7.978,2.5L18.855,9.939a2.5,2.5,0,0,1,0,4.12L7.977,21.5A2.5,2.5,0,0,1,6.562,21.94Zm0-18.884a1.494,1.494,0,0,0-.7.177,1.477,1.477,0,0,0-.8,1.327V19.439a1.5,1.5,0,0,0,2.35,1.235l10.877-7.44a1.5,1.5,0,0,0,0-2.471L7.413,3.326A1.491,1.491,0,0,0,6.564,3.056Z"></path>
-                    </g>
-                  </svg>
-                </span>
-              </button>
-            }
-          >
-            <button
-              class="level-item button is-rounded"
-              type="button"
-              onClick={() => pauseVideo()}
-            >
-              <span class="icon">
-                <svg
-                  stroke="currentColor"
-                  fill="currentColor"
-                  stroke-width="0"
-                  viewBox="0 0 24 24"
-                  height="200px"
-                  width="200px"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="Pause_1">
-                    <g>
-                      <path d="M8.25,21.937H6.564a2.5,2.5,0,0,1-2.5-2.5V4.563a2.5,2.5,0,0,1,2.5-2.5H8.25a2.5,2.5,0,0,1,2.5,2.5V19.437A2.5,2.5,0,0,1,8.25,21.937ZM6.564,3.063a1.5,1.5,0,0,0-1.5,1.5V19.437a1.5,1.5,0,0,0,1.5,1.5H8.25a1.5,1.5,0,0,0,1.5-1.5V4.563a1.5,1.5,0,0,0-1.5-1.5Z"></path>
-                      <path d="M17.436,21.937H15.75a2.5,2.5,0,0,1-2.5-2.5V4.563a2.5,2.5,0,0,1,2.5-2.5h1.686a2.5,2.5,0,0,1,2.5,2.5V19.437A2.5,2.5,0,0,1,17.436,21.937ZM15.75,3.063a1.5,1.5,0,0,0-1.5,1.5V19.437a1.5,1.5,0,0,0,1.5,1.5h1.686a1.5,1.5,0,0,0,1.5-1.5V4.563a1.5,1.5,0,0,0-1.5-1.5Z"></path>
-                    </g>
-                  </g>
-                </svg>
-              </span>
-            </button>
-          </Show>
-          <div class="level-item">
-            <input
-              type="number"
-              class="input"
-              name="endMinutes"
-              required={true}
-              value={video.end.minute}
-              onInput={(e) => setVideo("end", (end) => ({ ...end, minute: Number(e.target.value) }))}
-            />
-            <input
-              type="number"
-              class="input"
-              name="endSeconds"
-              required={true}
-              value={video.end.second}
-              onInput={(e) => setVideo("end", (end) => ({ ...end, second: Number(e.target.value) }))}
-            />
-          </div>
-          <label class="checkbox">
-            <input type="checkbox" name="loop" onClick={() => setVideo("loop", (loop) => !loop)} />
-            Loop
-          </label>
-        </div>
-        <div class="field has-addons">
-          <For each={playbackRates}>
-            {(rate) => (
-              <div class="control">
-                <button
-                  type="button"
-                  class={video.playbackRate == rate ? "button is-active" : "button"}
-                  onClick={() => setVideo("playbackRate", rate)}
-                >
-                  {Math.ceil(rate * 100)}%
-                </button>
+    <div class="container is-flex is-flex-direction-column is-justify-content-center is-align-items-center">
+      <div id="player"></div>
+
+      <div>
+        <form onSubmit={submitForm}>
+          <Show when={search.id}>
+            <div id="loop-id" class="field">
+              <div class="control disabled">
+                <input id="loop-id" class="input" type="text" name="loopId" value={search.id} readonly={true} />
               </div>
-            )}
-          </For>
-        </div>
-        <div class="control">
-          <button class="button is-link" type="submit">Save</button>
-        </div>
+              <label class="label help">Loop ID</label>
+            </div>
+          </Show>
+
+          <div class="field">
+            <div class="control">
+              <input
+                class="input"
+                type="text"
+                name="videoId"
+                required={true}
+                onInput={(e) => {
+                  const videoId = parseUrl(e.target.value)
+                  setSearch({
+                    startMinute: undefined,
+                    startSecond: undefined,
+                    videoId, endMinute:
+                      undefined,
+                    endSecond: undefined
+                  })
+                  setVideo("videoId", videoId);
+                }}
+                value={video.videoId}
+              />
+
+            </div>
+
+            <label class="label help">Video ID</label>
+          </div>
+          <div class="field">
+            <div class="control">
+              <input class="input" type="text" name="loopName" value={search.loopName || "Chorus"} />
+            </div>
+            <label class="label help">Loop Name</label>
+          </div>
+          <div class="level is-gap-4">
+            <div class="level-left">
+              <div class="level-item time-inputs">
+                <input
+                  type="number"
+                  class="input time"
+                  name="startMinutes"
+                  required={true}
+                  min={0}
+                  value={video.start.minute}
+                  onInput={(e) => setVideo("start", (start) => ({ ...start, minute: Number(e.target.value) }))}
+                />
+                <input
+                  type="number"
+                  class="input time"
+                  name="startSeconds"
+                  required={true}
+                  min={0}
+                  max={59}
+                  value={video.start.second}
+                  onInput={(e) => setVideo("start", (start) => ({ ...start, second: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+            <div class="level-item is-gap-1">
+              <Show
+                when={video.playing}
+                fallback={
+                  <button
+                    class="level-item button is-rounded play-pause"
+                    type="button"
+                    onClick={() => playVideo()}
+                  >
+                    <span class="icon">
+                      <svg
+                        stroke="currentColor"
+                        fill="currentColor"
+                        stroke-width="0"
+                        viewBox="0 0 24 24"
+                        height="200px"
+                        width="200px"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <g id="Play_1">
+                          <path d="M6.562,21.94a2.5,2.5,0,0,1-2.5-2.5V4.56A2.5,2.5,0,0,1,7.978,2.5L18.855,9.939a2.5,2.5,0,0,1,0,4.12L7.977,21.5A2.5,2.5,0,0,1,6.562,21.94Zm0-18.884a1.494,1.494,0,0,0-.7.177,1.477,1.477,0,0,0-.8,1.327V19.439a1.5,1.5,0,0,0,2.35,1.235l10.877-7.44a1.5,1.5,0,0,0,0-2.471L7.413,3.326A1.491,1.491,0,0,0,6.564,3.056Z"></path>
+                        </g>
+                      </svg>
+                    </span>
+                  </button>
+                }
+              >
+                <button
+                  class="level-item button is-rounded play-pause"
+                  type="button"
+                  onClick={() => pauseVideo()}
+                >
+                  <span class="icon">
+                    <svg
+                      stroke="currentColor"
+                      fill="currentColor"
+                      stroke-width="0"
+                      viewBox="0 0 24 24"
+                      height="200px"
+                      width="200px"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <g id="Pause_1">
+                        <g>
+                          <path d="M8.25,21.937H6.564a2.5,2.5,0,0,1-2.5-2.5V4.563a2.5,2.5,0,0,1,2.5-2.5H8.25a2.5,2.5,0,0,1,2.5,2.5V19.437A2.5,2.5,0,0,1,8.25,21.937ZM6.564,3.063a1.5,1.5,0,0,0-1.5,1.5V19.437a1.5,1.5,0,0,0,1.5,1.5H8.25a1.5,1.5,0,0,0,1.5-1.5V4.563a1.5,1.5,0,0,0-1.5-1.5Z"></path>
+                          <path d="M17.436,21.937H15.75a2.5,2.5,0,0,1-2.5-2.5V4.563a2.5,2.5,0,0,1,2.5-2.5h1.686a2.5,2.5,0,0,1,2.5,2.5V19.437A2.5,2.5,0,0,1,17.436,21.937ZM15.75,3.063a1.5,1.5,0,0,0-1.5,1.5V19.437a1.5,1.5,0,0,0,1.5,1.5h1.686a1.5,1.5,0,0,0,1.5-1.5V4.563a1.5,1.5,0,0,0-1.5-1.5Z"></path>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                </button>
+              </Show>
+
+              <label id="set-loop">
+                <input type="checkbox" name="loop" onClick={() => setVideo("loop", (loop) => !loop)} />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </label>
+            </div>
+
+            <div class="level-right">
+              <div class="level-item time-inputs">
+                <input
+                  type="number"
+                  class="input time"
+                  name="endMinutes"
+                  min={0}
+                  required={true}
+                  value={video.end.minute}
+                  onInput={(e) => setVideo("end", (end) => ({ ...end, minute: Number(e.target.value) }))}
+                />
+                <input
+                  type="number"
+                  class="input time"
+                  name="endSeconds"
+                  min={0}
+                  max={59}
+                  required={true}
+                  value={video.end.second}
+                  onInput={(e) => setVideo("end", (end) => ({ ...end, second: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+          </div>
+          <div class="field has-addons is-flex-direction-column is-align-items-center">
+            <input type="range" name="playbackRate" min="0.3" max="1.5" step="0.10" onChange={(e) => setVideo("playbackRate", Number(e.target.value))} list="rates" id="rateRange" />
+            <output id="value" class="is-size-7 has-text-grey">Playback Rate: {video.playbackRate}x</output>
+            <div class="control">
+            </div>
+          </div>
+          <div class="field is-grouped is-justify-content-center">
+            <Show when={search.id}>
+              <button class="button" type="submit">Update</button>
+            </Show>
+            <button class="button is-link" type="submit">Save</button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 };
 

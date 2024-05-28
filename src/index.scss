@@ -5,13 +5,14 @@ $brown: #757763;
 $beige-light: #d0d1cd;
 $beige-lighter: #eff0eb;
 
+$cyan: #065a60;
 // Path to Bulma's sass folder
 @use "bulma/sass" with ($family-primary: '"Nunito Sans", sans-serif',
   $family-monospace: '"Jetbrains Mono", monospace',
-  $grey-dark: $brown,
-  $grey-light: $beige-light,
-  $primary: $purple,
-  $link: $pink,
+  $primary: #0091D1,
+  $link: #A800D1,
+  $success: #29D100,
+  $danger: #D14000,
   $control-border-width: 2px,
   $input-shadow: none,
 
@@ -29,3 +30,86 @@ tbody tr:hover {
 
 // Import the Google Font
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+
+input.time {
+  max-width: 7rem;
+}
+
+button.play-pause {
+  height: 6rem;
+  width: 6rem;
+  color: var(--bulma-primary);
+  border-color: var(--bulma-primary);
+}
+
+div.time-inputs {
+  input:first-child {
+    text-align: right;
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  input:last-child {
+    text-align: left;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+div#loop-id {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+label#set-loop {
+
+  input[type=checkbox] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  input[type=checkbox]+svg {
+    cursor: pointer;
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+
+  input[type=checkbox]:checked+svg {
+    color: var(--bulma-success);
+  }
+}
+
+input[type=range] {
+  width: 60vw;
+}
+
+.slide-fade-enter-active,
+.slide-fade-exit-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.slide-fade-enter,
+.slide-fade-exit-to {
+  transform: translateX(10px);
+  opacity: 0;
+}
+
+.slide-fade-enter {
+  transform: translateX(-10px);
+}
+
+div.notification {
+  margin: 1rem;
+  float: right;
+}
+
+div.top-right {
+  position: absolute;
+  top: 5vh;
+  right: 0vw;
+}

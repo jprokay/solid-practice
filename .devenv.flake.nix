@@ -1,7 +1,7 @@
 {
   inputs =
     let
-      version = "1.0.4";
+      version = "1.0.5";
 system = "aarch64-darwin";
 devenv_root = "/Users/jprokay/Code/solid-practice";
 devenv_dotfile = ./.devenv;
@@ -21,7 +21,7 @@ devenv_runtime = "/var/folders/7n/_d3b951n5qx8vvw319cp_yrh0000gn/T/devenv-7cc1bb
 
       outputs = { nixpkgs, ... }@inputs:
         let
-          version = "1.0.4";
+          version = "1.0.5";
 system = "aarch64-darwin";
 devenv_root = "/Users/jprokay/Code/solid-practice";
 devenv_dotfile = ./.devenv;
