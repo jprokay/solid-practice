@@ -21,5 +21,5 @@ instead of insert on public.loops
 for each row execute function public.insert_loops();
 
 -- migrate:down
-drop function if exists public.insert_loops cascade;
-
+-- drop function if exists public.insert_loops cascade;
+--

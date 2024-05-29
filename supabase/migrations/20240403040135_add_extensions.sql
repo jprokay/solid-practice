@@ -10,10 +10,10 @@ create extension pg_stat_monitor with schema extensions;
 COMMIT;
 
 -- migrate:down
-BEGIN;
-
-drop extension if exists pgtap;
-
-drop extension if exists pg_state_monitor;
-
-COMMIT;
+-- BEGIN;
+--
+-- drop extension if exists pgtap;
+--
+-- drop extension if exists pg_state_monitor;
+--
+-- COMMIT;

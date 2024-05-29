@@ -63,12 +63,12 @@ from
 COMMIT;
 
 -- migrate:down
-drop view if exists public.profiles;
-
-drop trigger if exists on_auth_user_created on auth.users;
-
-drop function if exists v1.handle_new_user;
-
-drop table if exists v1.profiles;
-
-drop schema if exists v1 cascade;
+-- drop view if exists public.profiles;
+--
+-- drop trigger if exists on_auth_user_created on auth.users;
+--
+-- drop function if exists v1.handle_new_user;
+--
+-- drop table if exists v1.profiles;
+--
+-- drop schema if exists v1 cascade;

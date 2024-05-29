@@ -46,6 +46,6 @@ instead of delete on public.loops
 for each row execute function public.delete_loops();
 
 -- migrate:down
-drop function if exists public.update_loops cascade;
-drop function if exists public.delete_loops cascade;
+-- drop function if exists public.update_loops cascade;
+-- drop function if exists public.delete_loops cascade;
 

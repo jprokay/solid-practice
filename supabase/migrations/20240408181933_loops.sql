@@ -75,15 +75,15 @@ from
 COMMIT;
 
 -- migrate:down
-BEGIN;
-
-drop view if exists public.loops cascade;
-
-drop function if exists v1.update_loop_updated_at cascade;
-
-drop table if exists v1.loops;
-
-drop table if exists v1.youtube_videos cascade;
-
-
-COMMIT;
+-- BEGIN;
+--
+-- drop view if exists public.loops cascade;
+--
+-- drop function if exists v1.update_loop_updated_at cascade;
+--
+-- drop table if exists v1.loops;
+--
+-- drop table if exists v1.youtube_videos cascade;
+--
+--
+-- COMMIT;

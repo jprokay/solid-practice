@@ -7,10 +7,10 @@ grant delete, insert, references, select, trigger, truncate, update on all table
 COMMIT;
 
 -- migrate:down
-BEGIN;
-
-revoke all privileges on all tables in schema v1 to authenticated;
-reovke all privileges on all tables in schema v1 to service_role;
-
-COMMIT;
+-- BEGIN;
+--
+-- revoke all privileges on all tables in schema v1 to authenticated;
+-- reovke all privileges on all tables in schema v1 to service_role;
+--
+-- COMMIT;
 
