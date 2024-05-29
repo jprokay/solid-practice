@@ -9,11 +9,11 @@ import {
 
 import YouTubePlayer from "youtube-player";
 import { type YouTubePlayer as YTPlayer } from "youtube-player/dist/types";
-import { createStore, produce } from "solid-js/store"
+import { createStore } from "solid-js/store"
 import supabase from "../supabase";
 import { useSearchParams } from "@solidjs/router";
+import { Notification, useNotification } from "../components/Notification";
 
-import { Tables } from "../types/supabase"
 
 const Player: Component = () => {
   const [search, setSearch] = useSearchParams();
@@ -21,12 +21,12 @@ const Player: Component = () => {
 
   const [video, setVideo] = createStore({
     start: {
-      minute: 0,
-      second: 0,
+      minute: Number(search.startMinute || 0),
+      second: Number(search.startSecond || 0),
     },
     end: {
-      minute: 0,
-      second: 0,
+      minute: Number(search.endMinute || 0),
+      second: Number(search.endSecond || 0),
     },
     videoId: search.videoId || "nN120kCiVyQ",
     loop: false,
@@ -36,12 +36,17 @@ const Player: Component = () => {
     name: undefined,
   });
 
+  const { show: showNotification, setShow: setShowNotification, notification, setNotification } = useNotification()
+
   onMount(() => {
+    const startSec = Number(search.startMinute || 0) * 60 + Number(search.startSecond || 0)
+
     const ytPlayer = YouTubePlayer("player", {
       videoId: search.videoId || video.videoId,
       playerVars: {
         autoplay: 0,
         enablejsapi: 1,
+        start: startSec
       },
     });
 
@@ -68,27 +73,27 @@ const Player: Component = () => {
 
   onCleanup(() => clearInterval(timer))
 
-  createEffect(() => {
-    player()?.loadVideoById(search.videoId || video.videoId, 0);
-
-    const start = {
-      minute: parseInt(search.startMinute || '0'),
-      second: parseInt(search.startSecond || '0'),
-    }
-    const endo = {
-      minute: parseInt(search.endMinute || '0'),
-      second: parseInt(search.endSecond || '0')
-    }
-
-    setVideo(produce((v) => {
-      v.end = endo
-      v.start = start
-      v.playing = true
-      v.duration = 0
-    }))
-
-  });
-
+  // createEffect(() => {
+  //   player()?.loadVideoById(search.videoId || video.videoId, 0);
+  //
+  //   const start = {
+  //     minute: parseInt(search.startMinute || '0'),
+  //     second: parseInt(search.startSecond || '0'),
+  //   }
+  //   const endo = {
+  //     minute: parseInt(search.endMinute || '0'),
+  //     second: parseInt(search.endSecond || '0')
+  //   }
+  //
+  //   setVideo(produce((v) => {
+  //     v.end = endo
+  //     v.start = start
+  //     v.playing = true
+  //     v.duration = 0
+  //   }))
+  //
+  // });
+  //
   setInterval(async () => {
     const endAsSeconds = video.end.minute * 60 + video.end.second
 
@@ -156,31 +161,40 @@ const Player: Component = () => {
 
     const id = formData.get("loopId")
 
-    if (id) {
-      await supabase.from("loops").update({
-        loop_start_second: Number(formData.get("startSeconds") as string),
-        loop_start_minute: Number(formData.get("startMinutes") as string),
-        loop_end_second: Number(formData.get("endSeconds") as string),
-        loop_end_minute: Number(formData.get("endMinutes") as string),
-        video_id: formData.get("videoId") as string,
-        loop_name: formData.get("loopName") as string,
-        loop_id: id as string
-      }).eq('loop_id', id)
-    } else {
-      await supabase.from("loops").insert({
-        loop_start_second: Number(formData.get("startSeconds") as string),
-        loop_start_minute: Number(formData.get("startMinutes") as string),
-        loop_end_second: Number(formData.get("endSeconds") as string),
-        loop_end_minute: Number(formData.get("endMinutes") as string),
-        video_id: formData.get("videoId") as string,
-        loop_name: formData.get("loopName") as string,
-      })
+    try {
+      if (id) {
+        await supabase.from("loops").update({
+          loop_start_second: Number(formData.get("startSeconds") as string),
+          loop_start_minute: Number(formData.get("startMinutes") as string),
+          loop_end_second: Number(formData.get("endSeconds") as string),
+          loop_end_minute: Number(formData.get("endMinutes") as string),
+          video_id: formData.get("videoId") as string,
+          loop_name: formData.get("loopName") as string,
+          loop_id: id as string
+        }).eq('loop_id', id)
+      } else {
+        await supabase.from("loops").insert({
+          loop_start_second: Number(formData.get("startSeconds") as string),
+          loop_start_minute: Number(formData.get("startMinutes") as string),
+          loop_end_second: Number(formData.get("endSeconds") as string),
+          loop_end_minute: Number(formData.get("endMinutes") as string),
+          video_id: formData.get("videoId") as string,
+          loop_name: formData.get("loopName") as string,
+        })
+      }
+      setNotification("content", "Saved")
+    } catch {
+      setNotification("content", "An error occurred")
+      setNotification("type", "danger")
+    } finally {
+      setShowNotification(true)
     }
   }
 
   // TODO: Update inputs to have a separate for seeing the whole URL instead of just the video ID
   return (
     <div class="container is-flex is-flex-direction-column is-justify-content-center is-align-items-center">
+      <Notification it={notification} show={showNotification()} />
       <div id="player"></div>
 
       <div>

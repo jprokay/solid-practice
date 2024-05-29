@@ -1,21 +1,15 @@
 import { A } from "@solidjs/router";
-import { Match, Show, Switch, createEffect, createSignal, onMount } from "solid-js";
+import { Match, Show, Switch, createSignal, onMount } from "solid-js";
 import Login from "./../authentication/Login";
 import { Portal } from "solid-js/web";
 import "./Navbar.module.css";
 import { User } from "@supabase/supabase-js";
 import supabase from "./../supabase";
-import { createStore } from "solid-js/store";
-import { Transition } from "solid-transition-group"
+import { Notification, useNotification } from "../components/Notification";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = createSignal(false);
-  const [notification, setNotification] = createStore({
-    type: "success",
-    content: "Logged in"
-  })
-
-  const [showNotification, setShowNotification] = createSignal(false);
+  const { show: showNotification, setShow: setShowNotification, notification, setNotification } = useNotification()
   const [user, setUser] = createSignal<User>();
 
   onMount(async () => {
@@ -26,20 +20,12 @@ const Navbar = () => {
     }
   })
 
-  createEffect(() => {
-    if (showNotification()) {
-      setInterval(() => setShowNotification(false), 1_000)
-    }
-  })
-
-
   const onLogout = async () => {
     await supabase.auth.signOut()
     setUser(undefined)
     setNotification({ type: "success", content: "Logged out" })
     setShowNotification(true)
   }
-
 
   return (
     <nav class="navbar" role="navigation" aria-label="main site navigation">
@@ -68,17 +54,8 @@ const Navbar = () => {
           </div>
 
         </Show>
-        <Transition name="slide-fade">
-          <Show when={showNotification()}>
-            <div class="top-right">
-              <div class={notification.type == "success" ? "notification is-success" : "notification is-danger"}>
-                {notification.content}
-              </div>
-            </div>
-          </Show>
-        </Transition>
-
       </Portal>
+      <Notification it={notification} show={showNotification()} />
       <div class="navbar-brand">
         <a class="navbar-item">
           <svg

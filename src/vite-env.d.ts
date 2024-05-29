@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
 	readonly VITE_CF_SITE_KEY: string;
+	readonly VITE_SUPABASE_URL: string;
+	readonly VITE_SUPABASE_KEY: string;
 	// more env variables...
 }
 
