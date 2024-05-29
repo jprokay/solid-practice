@@ -97,7 +97,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
     const ele = document.getElementById("captcha")
     window.turnstile.ready(function() {
       window.turnstile.render(ele, {
-        sitekey: "3x00000000000000000000FF"
+        sitekey: import.meta.env.VITE_CF_SITE_KEY
       })
     })
   })
