@@ -1,5 +1,4 @@
 name: Deploy Migrations to Production
-environment: production
 
 on:
   push:
@@ -10,7 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
