@@ -1,5 +1,6 @@
 import {
   Component,
+  JSX,
   Show,
   createEffect,
   createSignal,
@@ -14,10 +15,15 @@ import supabase from "../supabase";
 import { useSearchParams } from "@solidjs/router";
 import { Notification, useNotification } from "../components/Notification";
 
+type Props = {
+  enableSave: boolean
+  fallback: JSX.Element
+}
 
-const Player: Component = () => {
+const Player: Component<Props> = (props) => {
   const [search, setSearch] = useSearchParams();
   const [player, setPlayer] = createSignal<YTPlayer>();
+  const [slider, setSlider] = createSignal(1);
 
   const [video, setVideo] = createStore({
     start: {
@@ -75,27 +81,6 @@ const Player: Component = () => {
 
   onCleanup(() => clearInterval(timer))
 
-  // createEffect(() => {
-  //   player()?.loadVideoById(search.videoId || video.videoId, 0);
-  //
-  //   const start = {
-  //     minute: parseInt(search.startMinute || '0'),
-  //     second: parseInt(search.startSecond || '0'),
-  //   }
-  //   const endo = {
-  //     minute: parseInt(search.endMinute || '0'),
-  //     second: parseInt(search.endSecond || '0')
-  //   }
-  //
-  //   setVideo(produce((v) => {
-  //     v.end = endo
-  //     v.start = start
-  //     v.playing = true
-  //     v.duration = 0
-  //   }))
-  //
-  // });
-  //
   setInterval(async () => {
     const endAsSeconds = video.end.minute * 60 + video.end.second
 
@@ -195,7 +180,7 @@ const Player: Component = () => {
 
   // TODO: Update inputs to have a separate for seeing the whole URL instead of just the video ID
   return (
-    <div class="container is-flex is-flex-direction-column is-justify-content-center is-align-items-center">
+    <div class="container is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-gap-2">
       <Notification it={notification} show={showNotification()} />
       <div id="player"></div>
 
@@ -214,8 +199,9 @@ const Player: Component = () => {
             <div class="control">
               <input
                 class="input"
-                type="text"
+                type="url"
                 name="videoId"
+                inputmode="url"
                 required={true}
                 onInput={(e) => {
                   const videoId = parseUrl(e.target.value)
@@ -249,6 +235,7 @@ const Player: Component = () => {
                   class="input time"
                   name="startMinutes"
                   required={true}
+                  inputmode="numeric"
                   min={0}
                   value={video.start.minute}
                   onInput={(e) => setVideo("start", (start) => ({ ...start, minute: Number(e.target.value) }))}
@@ -257,6 +244,7 @@ const Player: Component = () => {
                   type="number"
                   class="input time"
                   name="startSeconds"
+                  inputmode="numeric"
                   required={true}
                   min={0}
                   max={59}
@@ -332,6 +320,7 @@ const Player: Component = () => {
                   type="number"
                   class="input time"
                   name="endMinutes"
+                  inputmode="numeric"
                   min={0}
                   required={true}
                   value={video.end.minute}
@@ -341,6 +330,7 @@ const Player: Component = () => {
                   type="number"
                   class="input time"
                   name="endSeconds"
+                  inputmode="numeric"
                   min={0}
                   max={59}
                   required={true}
@@ -351,17 +341,23 @@ const Player: Component = () => {
             </div>
           </div>
           <div class="field has-addons is-flex-direction-column is-align-items-center">
-            <input type="range" name="playbackRate" min="0.3" max="1.5" step="0.10" onChange={(e) => setVideo("playbackRate", Number(e.target.value))} list="rates" id="rateRange" />
-            <output id="value" class="is-size-7 has-text-grey">Playback Rate: {video.playbackRate}x</output>
+            <input type="range" name="playbackRate" min="0.3" max="1.5" step="0.10"
+              onChange={(e) => setVideo("playbackRate", Number(e.target.value))}
+              onInput={(e) => setSlider(Number(e.target.value))}
+              list="rates"
+              id="rateRange" />
+            <output id="value" class="is-size-7 has-text-grey">Playback Rate: {slider()}x</output>
             <div class="control">
             </div>
           </div>
-          <div class="field is-grouped is-justify-content-center">
-            <Show when={search.id}>
-              <button class="button" type="submit">Update</button>
-            </Show>
-            <button class="button is-link" type="submit">Save</button>
-          </div>
+          <Show when={props.enableSave} fallback={props.fallback}>
+            <div class="field is-grouped is-justify-content-center">
+              <Show when={search.id}>
+                <button class="button" type="submit">Update</button>
+              </Show>
+              <button class="button is-link" type="submit">Save</button>
+            </div>
+          </Show>
         </form>
       </div>
     </div>

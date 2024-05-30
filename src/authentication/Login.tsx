@@ -145,7 +145,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
       <Match when={step() == 1}>
         <form onSubmit={submitOTP}>
           <div class="field">
-            <label class="label">OTP</label>
+            <label class="label">Check your email for your one time password:</label>
             <div class="control">
               <input id="otpInput" name="One time password" ref={otpInput} type="text" placeholder="One time password" class="input" />
             </div>
