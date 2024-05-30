@@ -34,8 +34,8 @@ const Navbar = () => {
         <Show when={isOpen()}>
           <div class={"modal is-active"}>
             <div class="modal-background" />
-            <div class="modal-content has-background-primary">
-              <section class="section">
+            <div class="modal-content has-background-dark">
+              <section>
                 <Login
                   onCancel={() => setIsOpen(false)}
                   onConfirm={(user) => {

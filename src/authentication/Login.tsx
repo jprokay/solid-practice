@@ -111,7 +111,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
         <form onSubmit={submitEmail}>
           <div class="field">
             <label class="label">Email</label>
-            <div class="control">
+            <div class="control is-large">
               <input
                 id="emailInput"
                 name="Email address"
@@ -120,6 +120,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
                 min="2"
                 placeholder="Enter email"
                 autocomplete="email"
+                class="input"
               />
             </div>
           </div>
@@ -128,7 +129,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             <div class="control">
               <button
                 type="submit"
-                class="button"
+                class="button is-primary"
               >
                 Send
               </button>
@@ -146,12 +147,12 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
           <div class="field">
             <label class="label">OTP</label>
             <div class="control">
-              <input id="otpInput" name="One time password" ref={otpInput} type="text" placeholder="One time password" />
+              <input id="otpInput" name="One time password" ref={otpInput} type="text" placeholder="One time password" class="input" />
             </div>
           </div>
           <div class="field is-grouped">
             <div class="control">
-              <button class="button" type="submit">
+              <button class="button is-primary" type="submit">
                 Confirm OTP
               </button>
             </div>

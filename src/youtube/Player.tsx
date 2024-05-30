@@ -43,6 +43,8 @@ const Player: Component = () => {
 
     const ytPlayer = YouTubePlayer("player", {
       videoId: search.videoId || video.videoId,
+      width: undefined,
+      height: undefined,
       playerVars: {
         autoplay: 0,
         enablejsapi: 1,
