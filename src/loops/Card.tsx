@@ -16,6 +16,7 @@ export const LoopCard: Component<LoopProps> = (props: LoopProps) => {
     url.searchParams.append("endSecond", String(props.loop_end_second))
 
     url.searchParams.append("videoId", String(props.video_id))
+    url.searchParams.append("videoUrl", String(props.video_url))
     url.searchParams.append("id", String(props.loop_id))
 
     url.searchParams.append("loopName", String(props.loop_name))

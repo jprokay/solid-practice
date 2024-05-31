@@ -10,7 +10,7 @@ import {
 
 import YouTubePlayer from "youtube-player";
 import { type YouTubePlayer as YTPlayer } from "youtube-player/dist/types";
-import { createStore } from "solid-js/store"
+import { createStore, produce } from "solid-js/store"
 import supabase from "../supabase";
 import { useSearchParams } from "@solidjs/router";
 import { Notification, useNotification } from "../components/Notification";
@@ -19,6 +19,33 @@ type Props = {
   enableSave: boolean
   fallback: JSX.Element
 }
+
+function parseBrowserBarUrl(url: string): string | undefined {
+  const regex = /^https?:\/\/[^/]+\/(?:watch\?v=)?([^&]+)/;
+  const match = url.match(regex);
+
+  if (match) {
+    return match[1];
+  }
+  return undefined
+}
+
+
+function parseShareUrl(url: string): string | undefined {
+  const regex = /^https?:\/\/[^/]+\/([^?]+)/;
+
+  const match = url.match(regex);
+
+  if (match) {
+    return match[1];
+  } return undefined
+}
+
+function parseUrl(url: string): string {
+  return parseBrowserBarUrl(url) || parseShareUrl(url) || url
+}
+
+const DEFAULT_URL = 'https://youtube.com/watch?v=nN120kCiVyQ'
 
 const Player: Component<Props> = (props) => {
   const [search, setSearch] = useSearchParams();
@@ -34,7 +61,8 @@ const Player: Component<Props> = (props) => {
       minute: Number(search.endMinute || 0),
       second: Number(search.endSecond || 0),
     },
-    videoId: search.videoId || "nN120kCiVyQ",
+    videoId: search.videoId || parseUrl(DEFAULT_URL),
+    videoUrl: search.videoUrl || DEFAULT_URL,
     loop: false,
     playing: false,
     playbackRate: 1.0,
@@ -58,9 +86,24 @@ const Player: Component<Props> = (props) => {
       },
     });
 
-
     setPlayer(ytPlayer);
   });
+
+  createEffect(() => {
+    player()?.loadVideoById(video.videoId, 0);
+
+    setVideo(produce((v) => {
+      v.start = {
+        second: 0,
+        minute: 0
+      }
+      v.end = {
+        second: 0,
+        minute: 0
+      }
+      v.duration = 0
+    }))
+  })
 
   const timer = setInterval(() => {
     player()?.getDuration().then((duration) => {
@@ -115,31 +158,6 @@ const Player: Component<Props> = (props) => {
     setVideo("playing", false)
   }
 
-  function parseBrowserBarUrl(url: string): string | undefined {
-    const regex = /^https?:\/\/[^/]+\/(?:watch\?v=)?([^&]+)/;
-    const match = url.match(regex);
-
-    if (match) {
-      return match[1];
-    }
-    return undefined
-  }
-
-
-  function parseShareUrl(url: string): string | undefined {
-    const regex = /^https?:\/\/[^/]+\/([^?]+)/;
-
-    const match = url.match(regex);
-
-    if (match) {
-      return match[1];
-    } return undefined
-  }
-
-  function parseUrl(url: string): string {
-    return parseBrowserBarUrl(url) || parseShareUrl(url) || url
-  }
-
   async function submitForm(e: Event): Promise<void> {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -182,14 +200,16 @@ const Player: Component<Props> = (props) => {
   return (
     <div class="container is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-gap-2">
       <Notification it={notification} show={showNotification()} />
-      <div id="player"></div>
+      <div id="player-container">
+        <div id="player"></div>
+      </div>
 
       <div>
         <form onSubmit={submitForm}>
           <Show when={search.id}>
             <div id="loop-id" class="field">
               <div class="control disabled">
-                <input id="loop-id" class="input" type="text" name="loopId" value={search.id} readonly={true} />
+                <input id="loop-id" class="input" type="hidden" name="loopId" value={search.id} readonly={true} />
               </div>
               <label class="label help">Loop ID</label>
             </div>
@@ -200,7 +220,7 @@ const Player: Component<Props> = (props) => {
               <input
                 class="input"
                 type="url"
-                name="videoId"
+                name="videoUrl"
                 inputmode="url"
                 required={true}
                 onInput={(e) => {
@@ -208,14 +228,18 @@ const Player: Component<Props> = (props) => {
                   setSearch({
                     startMinute: undefined,
                     startSecond: undefined,
-                    videoId, endMinute:
+                    videoId,
+                    videoUrl: e.target.value,
+                    endMinute:
                       undefined,
                     endSecond: undefined
                   })
-                  setVideo("videoId", videoId);
+                  setVideo("videoId", videoId)
+                  setVideo("videoUrl", e.target.value)
                 }}
-                value={video.videoId}
+                value={video.videoUrl}
               />
+              <input class="input" value={video.videoId} readonly={true} type="hidden" />
 
             </div>
 

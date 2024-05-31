@@ -46,6 +46,21 @@ div#player {
   width: 100vw;
 }
 
+div#player-container {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  /* 16:9 aspect ratio (9 / 16 = 0.5625) */
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
 button.play-pause {
   height: 6rem;
   width: 6rem;
