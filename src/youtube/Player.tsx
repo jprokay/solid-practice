@@ -14,6 +14,7 @@ import { createStore, produce } from "solid-js/store"
 import supabase from "../supabase";
 import { useSearchParams } from "@solidjs/router";
 import { Notification, useNotification } from "../components/Notification";
+import { PostgrestError } from "@supabase/supabase-js";
 
 type Props = {
   enableSave: boolean
@@ -89,8 +90,13 @@ const Player: Component<Props> = (props) => {
     setPlayer(ytPlayer);
   });
 
-  createEffect(() => {
-    player()?.loadVideoById(video.videoId, 0);
+  function changeVideo(url: string) {
+    const videoId = parseUrl(url)
+
+    if (!videoId) {
+      return
+    }
+    player()?.loadVideoById(videoId, 0);
 
     setVideo(produce((v) => {
       v.start = {
@@ -102,8 +108,21 @@ const Player: Component<Props> = (props) => {
         minute: 0
       }
       v.duration = 0
+      v.videoId = videoId
+      v.videoUrl = url
     }))
-  })
+    setSearch({
+      startMinute: undefined,
+      startSecond: undefined,
+      videoId,
+      videoUrl: url,
+      endMinute:
+        undefined,
+      endSecond: undefined
+    })
+
+
+  }
 
   const timer = setInterval(() => {
     player()?.getDuration().then((duration) => {
@@ -139,10 +158,6 @@ const Player: Component<Props> = (props) => {
     }
   }, 1000);
 
-  createEffect(() => {
-    const startAsSeconds = video.start.minute * 60 + video.start.second;
-    player()?.seekTo(startAsSeconds, true);
-  });
 
   createEffect(() => {
     player()?.setPlaybackRate(video.playbackRate);
@@ -158,6 +173,15 @@ const Player: Component<Props> = (props) => {
     setVideo("playing", false)
   }
 
+  function changeStart(startMinute: number, startSecond: number) {
+    const startAsSeconds = startMinute * 60 + startSecond;
+    player()?.seekTo(startAsSeconds, true);
+
+    if (!video.playing) {
+      player()?.pauseVideo();
+    }
+  }
+
   async function submitForm(e: Event): Promise<void> {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -166,9 +190,10 @@ const Player: Component<Props> = (props) => {
 
     const id = formData.get("loopId")
 
+    var error: PostgrestError | null = null
     try {
       if (id) {
-        await supabase.from("loops").update({
+        const data = await supabase.from("loops").update({
           loop_start_second: Number(formData.get("startSeconds") as string),
           loop_start_minute: Number(formData.get("startMinutes") as string),
           loop_end_second: Number(formData.get("endSeconds") as string),
@@ -177,8 +202,10 @@ const Player: Component<Props> = (props) => {
           loop_name: formData.get("loopName") as string,
           loop_id: id as string
         }).eq('loop_id', id)
+        error = data.error
+
       } else {
-        await supabase.from("loops").insert({
+        const data = await supabase.from("loops").insert({
           loop_start_second: Number(formData.get("startSeconds") as string),
           loop_start_minute: Number(formData.get("startMinutes") as string),
           loop_end_second: Number(formData.get("endSeconds") as string),
@@ -186,17 +213,21 @@ const Player: Component<Props> = (props) => {
           video_id: formData.get("videoId") as string,
           loop_name: formData.get("loopName") as string,
         })
+        error = data.error
       }
       setNotification("content", "Saved")
     } catch {
       setNotification("content", "An error occurred")
       setNotification("type", "danger")
     } finally {
+      if (error != null) {
+        setNotification("content", "An error occurred")
+        setNotification("type", "danger")
+      }
       setShowNotification(true)
     }
   }
 
-  // TODO: Update inputs to have a separate for seeing the whole URL instead of just the video ID
   return (
     <div class="container is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-gap-2">
       <Notification it={notification} show={showNotification()} />
@@ -224,22 +255,11 @@ const Player: Component<Props> = (props) => {
                 inputmode="url"
                 required={true}
                 onInput={(e) => {
-                  const videoId = parseUrl(e.target.value)
-                  setSearch({
-                    startMinute: undefined,
-                    startSecond: undefined,
-                    videoId,
-                    videoUrl: e.target.value,
-                    endMinute:
-                      undefined,
-                    endSecond: undefined
-                  })
-                  setVideo("videoId", videoId)
-                  setVideo("videoUrl", e.target.value)
+                  changeVideo(e.target.value)
                 }}
                 value={video.videoUrl}
               />
-              <input class="input" value={video.videoId} readonly={true} type="hidden" />
+              <input class="input" name="videoId" value={video.videoId} readonly={true} type="hidden" />
 
             </div>
 
@@ -262,7 +282,12 @@ const Player: Component<Props> = (props) => {
                   inputmode="numeric"
                   min={0}
                   value={video.start.minute}
-                  onInput={(e) => setVideo("start", (start) => ({ ...start, minute: Number(e.target.value) }))}
+                  onInput={(e) => {
+                    const newStart = Number(e.target.value)
+                    setVideo("start", (start) => ({ ...start, minute: newStart })
+                    )
+                    changeStart(newStart, video.start.second)
+                  }}
                 />
                 <input
                   type="number"
@@ -273,7 +298,12 @@ const Player: Component<Props> = (props) => {
                   min={0}
                   max={59}
                   value={video.start.second}
-                  onInput={(e) => setVideo("start", (start) => ({ ...start, second: Number(e.target.value) }))}
+                  onInput={(e) => {
+
+                    const newStart = Number(e.target.value)
+                    setVideo("start", (start) => ({ ...start, second: newStart }))
+                    changeStart(video.start.minute, newStart)
+                  }}
                 />
               </div>
             </div>

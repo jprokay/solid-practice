@@ -13,6 +13,8 @@
     postgresql_16
   ];
 
+  dotenv.enable = true;
+
   # https://devenv.sh/languages/
   languages.typescript.enable = true;
 

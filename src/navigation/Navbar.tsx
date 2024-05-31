@@ -34,7 +34,7 @@ const Navbar = () => {
         <Show when={isOpen()}>
           <div class={"modal is-active"}>
             <div class="modal-background" />
-            <div class="modal-content has-background-dark">
+            <div class="modal-content has-background">
               <section>
                 <Login
                   onCancel={() => setIsOpen(false)}
@@ -42,6 +42,7 @@ const Navbar = () => {
                     setIsOpen(false)
                     setShowNotification(true)
                     setUser(user)
+                    location.reload()
                   }}
                   onError={(err) => {
                     setIsOpen(false)
