@@ -243,7 +243,7 @@ const Player: Component<Props> = (props) => {
 
             </div>
 
-            <label class="label help">Video ID</label>
+            <label class="label help">Video URL</label>
           </div>
           <div class="field">
             <div class="control">
