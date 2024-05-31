@@ -22,7 +22,7 @@ type Props = {
 }
 
 function parseBrowserBarUrl(url: string): string | undefined {
-  const regex = /^https?:\/\/[^/]+\/(?:watch\?v=)?([^&]+)/;
+  const regex = /^https?:\/\/www\.youtube\.com\/(?:watch\?v=)?([^&]+)/;
   const match = url.match(regex);
 
   if (match) {
@@ -33,7 +33,7 @@ function parseBrowserBarUrl(url: string): string | undefined {
 
 
 function parseShareUrl(url: string): string | undefined {
-  const regex = /^https?:\/\/[^/]+\/([^?]+)/;
+  const regex = /^https?:\/\/youtu\.be\/([^?]+)/;
 
   const match = url.match(regex);
 
