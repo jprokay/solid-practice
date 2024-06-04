@@ -76,10 +76,14 @@ div.time-inputs {
     border-bottom-right-radius: 0;
   }
 
-  input:last-child {
+  input:nth-child(2) {
     text-align: left;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+  }
+
+  button {
+    margin-left: 0.5rem;
   }
 }
 

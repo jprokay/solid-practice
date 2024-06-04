@@ -23,6 +23,7 @@
     "vite-plugin-solid": "^2.8.2"
   },
   "dependencies": {
+    "@solid-primitives/scheduled": "^1.4.3",
     "@solidjs/router": "^0.13.1",
     "@supabase/supabase-js": "^2.39.8",
     "bulma": "^1.0.0",

@@ -15,6 +15,7 @@ import supabase from "../supabase";
 import { useSearchParams } from "@solidjs/router";
 import { Notification, useNotification } from "../components/Notification";
 import { PostgrestError } from "@supabase/supabase-js";
+import { debounce } from "@solid-primitives/scheduled";
 
 type Props = {
   enableSave: boolean
@@ -120,8 +121,6 @@ const Player: Component<Props> = (props) => {
         undefined,
       endSecond: undefined
     })
-
-
   }
 
   const timer = setInterval(() => {
@@ -141,9 +140,8 @@ const Player: Component<Props> = (props) => {
 
   }, 500)
 
-  onCleanup(() => clearInterval(timer))
 
-  setInterval(async () => {
+  const loopInterval = setInterval(async () => {
     const endAsSeconds = video.end.minute * 60 + video.end.second
 
     const startAsSeconds = video.start.minute * 60 + video.start.second;
@@ -158,6 +156,49 @@ const Player: Component<Props> = (props) => {
     }
   }, 1000);
 
+  function changeStartMinute(e: InputEvent) {
+    const input = e.target as HTMLInputElement
+    const minute = Number(input.value)
+    setVideo("start", (start) => ({ ...start, minute })
+    )
+    changeStart(minute, video.start.second)
+  }
+
+  function changeStartSecond(e: InputEvent) {
+    const input = e.target as HTMLInputElement
+    const second = Number(input.value)
+    setVideo("start", (start) => ({ ...start, second: second })
+    )
+    changeStart(video.start.minute, second)
+  }
+
+  function changeEndMinute(e: InputEvent) {
+    const input = e.target as HTMLInputElement
+    const minute = Number(input.value)
+    setVideo("end", (end) => ({ ...end, minute })
+    )
+  }
+
+  function changeEndSecond(e: InputEvent) {
+    const input = e.target as HTMLInputElement
+    const second = Number(input.value)
+    setVideo("end", (end) => ({ ...end, second })
+    )
+  }
+
+  const debouncedChangeStartMinute = debounce(changeStartMinute, 500)
+  const debouncedChangeStartSecond = debounce(changeStartSecond, 500)
+  const debouncedChangeEndMinute = debounce(changeEndMinute, 500)
+  const debouncedChangeEndSecond = debounce(changeEndSecond, 500)
+
+  onCleanup(() => {
+    clearInterval(loopInterval)
+    clearInterval(timer)
+    debouncedChangeStartMinute.clear()
+    debouncedChangeStartSecond.clear()
+    debouncedChangeEndMinute.clear()
+    debouncedChangeEndSecond.clear()
+  })
 
   createEffect(() => {
     player()?.setPlaybackRate(video.playbackRate);
@@ -166,6 +207,43 @@ const Player: Component<Props> = (props) => {
   function playVideo() {
     player()?.playVideo();
     setVideo("playing", true)
+  }
+
+  type TimePiece = {
+    minute: number,
+    second: number
+  }
+  async function getCurrentTime(): Promise<TimePiece | undefined> {
+    const currTime = await player()?.getCurrentTime();
+    if (currTime) {
+      const minute = Math.floor(currTime / 60);
+      const second = Math.floor(currTime - (minute * 60))
+
+      return { minute, second }
+    }
+    return undefined
+  }
+
+  async function setStartToNow() {
+    const currTime = await getCurrentTime()
+    if (currTime) {
+
+      setVideo("start", ({
+        minute: currTime.minute,
+        second: currTime.second
+      }))
+    }
+  }
+
+  async function setEndToNow() {
+    const currTime = await getCurrentTime()
+    if (currTime) {
+
+      setVideo("end", ({
+        minute: currTime.minute,
+        second: currTime.second
+      }))
+    }
   }
 
   function pauseVideo() {
@@ -181,6 +259,7 @@ const Player: Component<Props> = (props) => {
       player()?.pauseVideo();
     }
   }
+
 
   async function submitForm(e: Event): Promise<void> {
     e.preventDefault();
@@ -247,7 +326,7 @@ const Player: Component<Props> = (props) => {
           </Show>
 
           <div class="field">
-            <div class="control">
+            <div class="control field is-grouped">
               <input
                 class="input"
                 type="url"
@@ -259,6 +338,7 @@ const Player: Component<Props> = (props) => {
                 }}
                 value={video.videoUrl}
               />
+              <button type="button" class="button is-primary is-outlined" onClick={() => setVideo("videoUrl", "")}>Clear</button>
               <input class="input" name="videoId" value={video.videoId} readonly={true} type="hidden" />
 
             </div>
@@ -282,12 +362,7 @@ const Player: Component<Props> = (props) => {
                   inputmode="numeric"
                   min={0}
                   value={video.start.minute}
-                  onInput={(e) => {
-                    const newStart = Number(e.target.value)
-                    setVideo("start", (start) => ({ ...start, minute: newStart })
-                    )
-                    changeStart(newStart, video.start.second)
-                  }}
+                  onInput={(e) => debouncedChangeStartMinute(e)}
                 />
                 <input
                   type="number"
@@ -298,13 +373,9 @@ const Player: Component<Props> = (props) => {
                   min={0}
                   max={59}
                   value={video.start.second}
-                  onInput={(e) => {
-
-                    const newStart = Number(e.target.value)
-                    setVideo("start", (start) => ({ ...start, second: newStart }))
-                    changeStart(video.start.minute, newStart)
-                  }}
+                  onInput={(e) => debouncedChangeStartSecond(e)}
                 />
+                <button type="button" class="button is-primary is-outlined" onClick={setStartToNow}>Now</button>
               </div>
             </div>
             <div class="level-item is-gap-1">
@@ -378,7 +449,7 @@ const Player: Component<Props> = (props) => {
                   min={0}
                   required={true}
                   value={video.end.minute}
-                  onInput={(e) => setVideo("end", (end) => ({ ...end, minute: Number(e.target.value) }))}
+                  onInput={(e) => debouncedChangeEndMinute(e)}
                 />
                 <input
                   type="number"
@@ -389,19 +460,24 @@ const Player: Component<Props> = (props) => {
                   max={59}
                   required={true}
                   value={video.end.second}
-                  onInput={(e) => setVideo("end", (end) => ({ ...end, second: Number(e.target.value) }))}
+                  onInput={(e) => debouncedChangeEndSecond(e)}
                 />
+
+                <button type="button" class="button is-primary is-outlined" onClick={setEndToNow}>Now</button>
               </div>
             </div>
           </div>
-          <div class="field has-addons is-flex-direction-column is-align-items-center">
+          <div class="field has-addons is-flex-direction-column is-align-items-center is-gap-2">
             <input type="range" name="playbackRate" min="0.3" max="1.5" step="0.10"
-              onChange={(e) => setVideo("playbackRate", Number(e.target.value))}
-              onInput={(e) => setSlider(Number(e.target.value))}
+              onInput={(e) => setVideo("playbackRate", Number(e.target.value))}
               list="rates"
               id="rateRange" />
-            <output id="value" class="is-size-7 has-text-grey">Playback Rate: {slider()}x</output>
-            <div class="control">
+
+            <div class="field is-grouped is-align-items-center">
+
+              <button type="button" class="button is-link is-outlined" onClick={() => setVideo("playbackRate", (rate) => Math.max(rate - 0.05, 0))}>-5%</button>
+              <output id="value" class="is-size-6 has-text-grey">Speed: {video.playbackRate.toFixed(2)}x</output>
+              <button type="button" class="button is-link is-outlined" onClick={() => setVideo("playbackRate", (rate) => Math.min(rate + 0.05, 1.5))}>+5%</button>
             </div>
           </div>
           <Show when={props.enableSave} fallback={props.fallback}>

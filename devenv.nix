@@ -32,7 +32,7 @@
   # processes.ping.exec = "ping example.com";
   processes = {
     supabase.exec = "${pkgs.supabase-cli}/bin/supabase stop && ${pkgs.supabase-cli}/bin/supabase start";
-    localias.exec = "localias stop && localias start";
+    localias.exec = "localias start";
     devlocal.exec = "${pkgs.corepack}/bin/pnpm run dev --host"; 
     prettierd.exec = "${pkgs.prettierd}/bin/prettierd start";
     eslintd.exec = "${pkgs.eslint_d}/bin/eslint_d start";
